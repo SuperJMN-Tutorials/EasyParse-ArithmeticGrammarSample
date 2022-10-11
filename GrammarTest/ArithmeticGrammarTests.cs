@@ -1,3 +1,4 @@
+using GrammarTest.Model;
 using Xunit.Abstractions;
 
 namespace GrammarTest;
@@ -14,10 +15,10 @@ public class ArithmeticGrammarTests
     [Fact]
     public void Test_grammar2()
     {
-        var parser = new Other().BuildCompiler<Term>();
+        var parser = new ArithmeticGrammarFluent().BuildCompiler<Term>();
 
-        var otherGrammar = string.Join(Environment.NewLine, new Other().ToGrammarFileContent());
-        var originalGrammar = string.Join(Environment.NewLine, new ArithmeticGrammar().ToGrammarFileContent());
+        var otherGrammar = string.Join(Environment.NewLine, new ArithmeticGrammarFluent().ToGrammarFileContent());
+        var originalGrammar = string.Join(Environment.NewLine, new ArithmeticGrammarNative().ToGrammarFileContent());
 
         var result = parser.Compile("1+2*5");
 
