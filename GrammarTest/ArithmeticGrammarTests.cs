@@ -1,27 +1,27 @@
-using GrammarTest.Model;
-using Xunit.Abstractions;
+using System.Text.RegularExpressions;
+using FluentAssertions;
+using GrammarTest.Grammars;
 
 namespace GrammarTest;
 
 public class ArithmeticGrammarTests
 {
-    private readonly ITestOutputHelper output;
-
-    public ArithmeticGrammarTests(ITestOutputHelper output)
+    [Fact]
+    public void Both_grammars_should_be_equivalent()
     {
-        this.output = output;
+        var fluentGrammarContent = new ArithmeticGrammarFluent().ToGrammarFileContent()
+            .Select(Cleanup)
+            .ToList();
+
+        var nativeGrammarContent = new ArithmeticGrammarNative().ToGrammarFileContent()
+            .Select(Cleanup)
+            .ToList();
+
+        fluentGrammarContent.Should().BeEquivalentTo(nativeGrammarContent);
     }
 
-    [Fact]
-    public void Test_grammar2()
+    private static string Cleanup(string s)
     {
-        var parser = new ArithmeticGrammarFluent().BuildCompiler<Term>();
-
-        var otherGrammar = string.Join(Environment.NewLine, new ArithmeticGrammarFluent().ToGrammarFileContent());
-        var originalGrammar = string.Join(Environment.NewLine, new ArithmeticGrammarNative().ToGrammarFileContent());
-
-        var result = parser.Compile("1+2*5");
-
-        Assert.True(result.IsSuccess);
+        return Regex.Replace(s, @";\s*#\d*", "");
     }
 }
