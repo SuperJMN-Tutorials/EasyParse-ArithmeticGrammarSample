@@ -8,40 +8,25 @@ internal class ArithmeticGrammar : NativeGrammar
 {
     protected override IEnumerable<Regex> IgnorePatterns => new[] { new Regex(@"\s+") };
 
-    public Unit Unit([R("number", @"\d+")] string value) => new ConstantUnit(int.Parse(value));
-
-    public Unit Unit([L("-")] string minus, Unit unit) => new NegateUnit(unit);
-
-    public Unit Unit([L("(")] string open, Additive additive, [L(")")] string close) => new AdditiveUnit(additive);
-
-    public Multiplicative Multiplicative(Unit unit) => new MultiplicativeUnit(unit);
-
-    public Multiplicative Multiplicative(Multiplicative multiplicative, [L("*", "/")] string op, Unit unit) => new MultiplicativeBinary(multiplicative, op, unit);
-
-    public Additive Additive(Additive additive, [L("+", "-")] string op, Multiplicative multiplicative) => new AdditiveBinary(additive, op, multiplicative);
+    public Unit Unit([R("number", @"\d+")] string value) => new Unit(null, new ConstantExpression(int.Parse(value)));
+    public Unit Unit([L("-")] string minus, Unit unit) => new("-", unit);
+    public Unit Unit([L("(")] string open, Term term, [L(")")] string close) => new(term.Op, term.Expressions);
+    public Factor Factor(Unit unit) => new(unit.Op, unit.Expressions);
+    public Factor Factor(Factor factor, [L("*", "/")] string op, Unit unit) => new Factor(op, factor, unit);
+    public Term Term(Term term, [L("+", "-")] string op, Factor factor) => new Term(op, term, factor);
 
     [Start]
-    public Additive Additive(Multiplicative multiplicative) => new AdditiveMultiplicative(multiplicative);
+    public Term Term(Factor factor) => new Term(factor.Op, factor.Expressions);
 }
 
-internal record NegateUnit(Unit Unit) : Unit;
+public record Factor(string Op, params Expression[] Expressions) : ArithmeticOperation(Op, Expressions);
 
-internal record AdditiveBinary(Expression Left, string Op, Expression Right) : Additive;
-
-internal record AdditiveMultiplicative(Multiplicative Multiplicative) : Additive;
-
-public abstract record Multiplicative : Expression;
-
-internal record MultiplicativeBinary(Expression Left, string Op, Expression Right) : Multiplicative;
-
-internal record MultiplicativeUnit(Unit Unit) : Multiplicative;
-
-public abstract record Additive : Expression;
+public record Term(string Op, params Expression[] Expressions) : ArithmeticOperation(Op, Expressions);
 
 public record Expression;
 
-public record Unit : Expression;
+public record ArithmeticOperation(string? Op, params Expression[] Expressions) : Expression;
 
-internal record AdditiveUnit(Additive Additive) : Unit;
+public record Unit(string? Op, params Expression[] Expressions) : ArithmeticOperation(Op, Expressions);
 
-internal record ConstantUnit(int Value) : Unit;
+internal record ConstantExpression(int Value) : Expression;
